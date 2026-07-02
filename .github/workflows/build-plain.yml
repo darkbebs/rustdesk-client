@@ -46,21 +46,9 @@ jobs:
     with:
       version: ${{ inputs.version }}
 
-  build-RustDeskTempTopMostWindow:
-    uses: ./.github/workflows/third-party-RustDeskTempTopMostWindow.yml
-    with:
-      upload-artifact: true
-      target: windows-2022
-      configuration: Release
-      platform: x64
-      target_version: Windows10
-    secrets: inherit
-    strategy:
-      fail-fast: false
-
   build:
     name: Build Windows
-    needs: [generate-bridge, build-RustDeskTempTopMostWindow]
+    needs: [generate-bridge]
     runs-on: windows-2022
     steps:
       - name: Export GitHub Actions cache environment variables
@@ -249,7 +237,10 @@ jobs:
           runner_res=$(find . -name "Runner.res");
           if [ "$runner_res" != "" ]; then cp $runner_res ./libs/portable/Runner.res; fi
 
-      - name: Download RustDeskTempTopMostWindow artifacts
+      # Helper "topmost window" é opcional (feature de bloqueio de input). Se não
+      # existir, o cliente funciona sem ele. Não é bloqueante.
+      - name: Download RustDeskTempTopMostWindow artifacts (opcional)
+        continue-on-error: true
         uses: actions/download-artifact@master
         with:
           name: topmostwindow-artifacts
